@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CourseFlow - Student Course Selection</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f0f4ff;
+  color: #1e2a45;
+  min-height: 100vh;
+}
+
+/* ===== TOPBAR ===== */
+.topbar {
+  background: #4f46e5;
+  color: white;
+  padding: 0 24px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.topbar .logo {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+.topbar .logo span { color: #a5b4fc; }
+.topbar nav { display: flex; gap: 8px; }
+.topbar nav button {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.75);
+  font-size: 14px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.topbar nav button:hover,
+.topbar nav button.active {
+  background: rgba(255,255,255,0.15);
+  color: white;
+}
+.topbar .user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+.topbar .user-avatar {
+  width: 34px; height: 34px;
+  background: #a5b4fc;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 14px; color: #4f46e5;
+}
+
+/* ===== PAGES ===== */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ===== DASHBOARD ===== */
+.dashboard-hero {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: white;
+  padding: 40px 24px;
+  text-align: center;
+}
+.dashboard-hero h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+.dashboard-hero p { font-size: 15px; opacity: 0.85; margin-bottom: 24px; }
+.hero-btn {
+  background: white;
+  color: #4f46e5;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.hero-btn:hover { background: #e0e7ff; }
+
+.stats-row {
+  display: flex;
+  gap: 16px;
+  padding: 24px;
+  flex-wrap: wrap;
+}
+.stat-card {
+  flex: 1;
+  min-width: 140px;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  border-top: 4px solid #4f46e5;
+}
+.stat-card.green { border-top-color: #22c55e; }
+.stat-card.purple { border-top-color: #a855f7; }
+.stat-card.orange { border-top-color: #f97316; }
+.stat-card .num { font-size: 32px; font-weight: 800; color: #1e2a45; }
+.stat-card .lbl { font-size: 13px; color: #6b7280; margin-top: 4px; }
+
+.dash-section { padding: 0 24px 24px; }
+.dash-section h2 { font-size: 18px; font-weight: 700; margin-bottom: 14px; color: #1e2a45; }
+
+.enrolled-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+.enrolled-dash-card {
+  background: white;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  border-left: 4px solid #4f46e5;
+}
+.enrolled-dash-card.math { border-left-color: #a855f7; }
+.enrolled-dash-card.sci { border-left-color: #22c55e; }
+.enrolled-dash-card.hum { border-left-color: #f59e0b; }
+.enrolled-dash-card.biz { border-left-color: #ef4444; }
+.enrolled-dash-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.enrolled-dash-card .sub { font-size: 12px; color: #6b7280; }
+
+.empty-state {
+  background: white;
+  border-radius: 10px;
+  padding: 40px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 14px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+.empty-state .icon { font-size: 40px; margin-bottom: 10px; }
+
+/* ===== CATALOG PAGE ===== */
+.catalog-layout {
+  display: flex;
+  gap: 0;
+  min-height: calc(100vh - 60px);
+}
+
+.catalog-sidebar {
+  width: 240px;
+  min-width: 240px;
+  background: white;
+  padding: 20px 16px;
+  border-right: 1px solid #e5e7eb;
+  overflow-y: auto;
+}
+.catalog-sidebar h3 {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #9ca3af;
+  margin-bottom: 10px;
+  margin-top: 16px;
+}
+.catalog-sidebar h3:first-child { margin-top: 0; }
+
+.search-box {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  margin-bottom: 4px;
+  font-family: Arial, sans-serif;
+}
+.search-box:focus { border-color: #4f46e5; }
+
+.chip-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+.chip {
+  padding: 5px 11px;
+  border-radius: 20px;
+  border: 1.5px solid #e5e7eb;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  font-family: Arial, sans-serif;
+}
+.chip:hover { border-color: #4f46e5; color: #4f46e5; }
+.chip.active { background: #4f46e5; border-color: #4f46e5; color: white; }
+
+.credit-progress { margin-top: 12px; }
+.credit-label { display: flex; justify-content: space-between; font-size: 12px; color: #6b7280; margin-bottom: 6px; }
+.credit-bar-bg { background: #e5e7eb; border-radius: 4px; height: 8px; }
+.credit-bar-fill {
+  background: linear-gradient(90deg, #4f46e5, #a855f7);
+  height: 8px;
+  border-radius: 4px;
+  transition: width 0.3s;
+  width: 0%;
+}
+
+.catalog-main { flex: 1; padding: 20px; overflow-y: auto; }
+.catalog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.catalog-header h2 { font-size: 18px; font-weight: 700; }
+.catalog-header .count { font-size: 13px; color: #6b7280; }
+
+.course-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 14px;
+}
+
+.course-card {
+  background: white;
+  border-radius: 12px;
+  padding: 18px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  border: 2px solid transparent;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  position: relative;
+}
+.course-card:hover { border-color: #4f46e5; box-shadow: 0 4px 16px rgba(79,70,229,0.12); }
+.course-card.is-enrolled { border-color: #22c55e; }
+
+.dept-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.badge-cs { background: #ede9fe; color: #4f46e5; }
+.badge-math { background: #f5d0fe; color: #9333ea; }
+.badge-sci { background: #d1fae5; color: #059669; }
+.badge-hum { background: #fef3c7; color: #d97706; }
+.badge-biz { background: #fee2e2; color: #dc2626; }
+
+.course-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; line-height: 1.4; }
+.course-card .instructor { font-size: 12px; color: #6b7280; margin-bottom: 10px; }
+.course-meta { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+.meta-item { font-size: 11px; color: #6b7280; }
+
+.seat-info { font-size: 11px; color: #6b7280; margin-bottom: 5px; }
+.seat-bar-bg { background: #f3f4f6; border-radius: 3px; height: 5px; margin-bottom: 12px; }
+.seat-bar-fill { height: 5px; border-radius: 3px; background: #22c55e; transition: width 0.3s; }
+.seat-bar-fill.warn { background: #f59e0b; }
+.seat-bar-fill.low { background: #ef4444; }
+
+.enroll-btn {
+  width: 100%;
+  padding: 9px;
+  border-radius: 8px;
+  border: 2px solid #4f46e5;
+  background: transparent;
+  color: #4f46e5;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: Arial, sans-serif;
+  transition: background 0.15s, color 0.15s;
+}
+.enroll-btn:hover { background: #4f46e5; color: white; }
+.enroll-btn.drop { border-color: #ef4444; color: #ef4444; }
+.enroll-btn.drop:hover { background: #ef4444; color: white; }
+
+.enrolled-badge {
+  position: absolute;
+  top: 12px; right: 12px;
+  background: #22c55e;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  text-transform: uppercase;
+}
+
+/* ===== SCHEDULE PAGE ===== */
+.schedule-page { padding: 24px; }
+.schedule-page h2 { font-size: 22px; font-weight: 700; margin-bottom: 20px; }
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.day-col { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+.day-col .day-header {
+  background: #4f46e5;
+  color: white;
+  text-align: center;
+  padding: 10px;
+  font-weight: 700;
+  font-size: 13px;
+}
+.day-col .day-body { padding: 10px; min-height: 160px; }
+.schedule-chip {
+  background: #ede9fe;
+  border-left: 3px solid #4f46e5;
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  font-size: 11px;
+}
+.schedule-chip strong { display: block; font-size: 12px; color: #1e2a45; }
+.schedule-chip .time-txt { color: #6b7280; margin-top: 2px; }
+.schedule-chip.purple { background: #f5d0fe; border-left-color: #9333ea; }
+.schedule-chip.green { background: #d1fae5; border-left-color: #059669; }
+.schedule-chip.yellow { background: #fef3c7; border-left-color: #d97706; }
+.schedule-chip.red { background: #fee2e2; border-left-color: #dc2626; }
+.online-section { background: white; border-radius: 10px; padding: 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+.online-section h3 { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+.online-chip {
+  display: inline-block;
+  background: #e0e7ff;
+  color: #4f46e5;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 4px;
+}
+
+/* ===== GRADES PAGE ===== */
+.grades-page { padding: 24px; }
+.grades-page h2 { font-size: 22px; font-weight: 700; margin-bottom: 20px; }
+.gpa-card {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: white;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+.gpa-card .gpa-num { font-size: 52px; font-weight: 800; }
+.gpa-card .gpa-lbl { font-size: 14px; opacity: 0.8; }
+.grades-table {
+  width: 100%;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+  border-collapse: collapse;
+}
+.grades-table th {
+  background: #f9fafb;
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #e5e7eb;
+}
+.grades-table td {
+  padding: 13px 16px;
+  font-size: 13px;
+  border-bottom: 1px solid #f3f4f6;
+}
+.grade-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 13px;
+}
+.grade-a { background: #d1fae5; color: #059669; }
+.grade-b { background: #dbeafe; color: #2563eb; }
+.grade-c { background: #fef3c7; color: #d97706; }
+.grade-ip { background: #ede9fe; color: #7c3aed; }
+
+/* ===== TOAST ===== */
+.toast {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  background: #1e2a45;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  transform: translateY(80px);
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 9999;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.green { background: #22c55e; }
+.toast.red { background: #ef4444; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .catalog-sidebar { display: none; }
+  .week-grid { grid-template-columns: 1fr 1fr; }
+  .stats-row { gap: 10px; }
+  .stat-card { min-width: 120px; }
+  .topbar nav { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">Course<span>Flow</span></div>
+  <nav>
+    <button class="active" onclick="showPage('dashboard', this)">Dashboard</button>
+    <button onclick="showPage('catalog', this)">Course Catalog</button>
+    <button onclick="showPage('schedule', this)">My Schedule</button>
+    <button onclick="showPage('grades', this)">Grades</button>
+  </nav>
+  <div class="user-info">
+    <span style="font-size:13px;">Heman K.</span>
+    <div class="user-avatar">H</div>
+  </div>
+</div>
+
+<!-- ======================== DASHBOARD PAGE ======================== -->
+<div class="page active" id="page-dashboard">
+  <div class="dashboard-hero">
+    <h1>Welcome back, Heman! 👋</h1>
+    <p>Semester: Fall 2025 &nbsp;|&nbsp; Registration is open until Aug 30, 2025</p>
+    <button class="hero-btn" onclick="showPage('catalog', document.querySelector('.topbar nav button:nth-child(2)'))">Browse &amp; Enroll in Courses →</button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="num" id="dash-enrolled-count">0</div>
+      <div class="lbl">Courses Enrolled</div>
+    </div>
+    <div class="stat-card green">
+      <div class="num" id="dash-credits">0</div>
+      <div class="lbl">Total Credits</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="num">18</div>
+      <div class="lbl">Available Courses</div>
+    </div>
+    <div class="stat-card orange">
+      <div class="num">Aug 30</div>
+      <div class="lbl">Add/Drop Deadline</div>
+    </div>
+  </div>
+
+  <div class="dash-section">
+    <h2>My Enrolled Courses</h2>
+    <div class="enrolled-grid" id="dash-enrolled-list">
+      <div class="empty-state">
+        <div class="icon">📚</div>
+        <div>You haven't enrolled in any courses yet.<br>Go to <strong>Course Catalog</strong> to get started!</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== CATALOG PAGE ======================== -->
+<div class="page" id="page-catalog">
+  <div class="catalog-layout">
+
+    <!-- Sidebar -->
+    <div class="catalog-sidebar">
+      <h3>Search</h3>
+      <input class="search-box" id="searchInput" placeholder="Search courses..." oninput="renderCatalog()">
+
+      <h3>Department</h3>
+      <div class="chip-group" id="deptChips">
+        <button class="chip active" onclick="setFilter('dept','all',this)">All</button>
+        <button class="chip" onclick="setFilter('dept','CS',this)">CS</button>
+        <button class="chip" onclick="setFilter('dept','MATH',this)">Math</button>
+        <button class="chip" onclick="setFilter('dept','SCI',this)">Science</button>
+        <button class="chip" onclick="setFilter('dept','HUM',this)">Humanities</button>
+        <button class="chip" onclick="setFilter('dept','BIZ',this)">Business</button>
+      </div>
+
+      <h3>Level</h3>
+      <div class="chip-group" id="levelChips">
+        <button class="chip active" onclick="setFilter('level','all',this)">All</button>
+        <button class="chip" onclick="setFilter('level','100',this)">100</button>
+        <button class="chip" onclick="setFilter('level','200',this)">200</button>
+        <button class="chip" onclick="setFilter('level','300',this)">300</button>
+        <button class="chip" onclick="setFilter('level','400',this)">400</button>
+      </div>
+
+      <h3>Schedule Type</h3>
+      <div class="chip-group" id="timeChips">
+        <button class="chip active" onclick="setFilter('time','all',this)">All</button>
+        <button class="chip" onclick="setFilter('time','MWF',this)">Mon/Wed/Fri</button>
+        <button class="chip" onclick="setFilter('time','TTh',this)">Tue/Thu</button>
+        <button class="chip" onclick="setFilter('time','Online',this)">Online</button>
+      </div>
+
+      <h3>Credit Load</h3>
+      <div class="credit-progress">
+        <div class="credit-label">
+          <span id="creditUsed">0 / 18 credits</span>
+          <span id="creditPct">0%</span>
+        </div>
+        <div class="credit-bar-bg">
+          <div class="credit-bar-fill" id="creditBarFill"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main -->
+    <div class="catalog-main">
+      <div class="catalog-header">
+        <h2>Course Catalog</h2>
+        <span class="count" id="catalogCount">18 courses</span>
+      </div>
+      <div class="course-grid" id="courseGrid"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ======================== SCHEDULE PAGE ======================== -->
+<div class="page" id="page-schedule">
+  <div class="schedule-page">
+    <h2>📅 My Weekly Schedule — Fall 2025</h2>
+    <div class="week-grid" id="weekGrid">
+      <div class="day-col">
+        <div class="day-header">Monday</div>
+        <div class="day-body" id="sched-Mon"></div>
+      </div>
+      <div class="day-col">
+        <div class="day-header">Tuesday</div>
+        <div class="day-body" id="sched-Tue"></div>
+      </div>
+      <div class="day-col">
+        <div class="day-header">Wednesday</div>
+        <div class="day-body" id="sched-Wed"></div>
+      </div>
+      <div class="day-col">
+        <div class="day-header">Thursday</div>
+        <div class="day-body" id="sched-Thu"></div>
+      </div>
+      <div class="day-col">
+        <div class="day-header">Friday</div>
+        <div class="day-body" id="sched-Fri"></div>
+      </div>
+    </div>
+    <div class="online-section" id="onlineSection" style="display:none;">
+      <h3>🌐 Online / Async Courses</h3>
+      <div id="onlineChips"></div>
+    </div>
+    <div class="empty-state" id="scheduleEmpty" style="margin-top:20px;">
+      <div class="icon">📅</div>
+      <div>No courses enrolled yet.<br>Visit <strong>Course Catalog</strong> to enroll!</div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================== GRADES PAGE ======================== -->
+<div class="page" id="page-grades">
+  <div class="grades-page">
+    <h2>📊 Academic Record — Fall 2025</h2>
+    <div class="gpa-card">
+      <div class="gpa-num">3.82</div>
+      <div class="gpa-lbl">Cumulative GPA (Previous Semesters)</div>
+    </div>
+    <table class="grades-table" id="gradesTable">
+      <thead>
+        <tr>
+          <th>Course ID</th>
+          <th>Course Name</th>
+          <th>Credits</th>
+          <th>Status</th>
+          <th>Grade</th>
+        </tr>
+      </thead>
+      <tbody id="gradesTbody">
+        <tr>
+          <td colspan="5" style="text-align:center;color:#9ca3af;padding:30px;">
+            Enroll in courses to see them here.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ======== DATA ========
+var COURSES = [
+  { id:'CS101', dept:'CS', level:'100', name:'Intro to Computer Science', instructor:'Dr. Priya Nair', credits:3, seats:22, total:30, time:'MWF', slot:'9:00 - 9:50 AM' },
+  { id:'CS201', dept:'CS', level:'200', name:'Data Structures & Algorithms', instructor:'Prof. Arjun Mehta', credits:3, seats:10, total:30, time:'TTh', slot:'10:00 - 11:20 AM' },
+  { id:'CS301', dept:'CS', level:'300', name:'Database Systems', instructor:'Dr. Lakshmi Rajan', credits:3, seats:5, total:25, time:'MWF', slot:'11:00 - 11:50 AM' },
+  { id:'CS401', dept:'CS', level:'400', name:'Machine Learning', instructor:'Prof. Karthik Iyer', credits:4, seats:18, total:20, time:'TTh', slot:'1:00 - 2:50 PM' },
+  { id:'CS402', dept:'CS', level:'400', name:'Cloud Computing & DevOps', instructor:'Dr. Sridhar Balan', credits:3, seats:20, total:25, time:'Online', slot:'Async (self-paced)' },
+  { id:'MATH101', dept:'MATH', level:'100', name:'Calculus I', instructor:'Prof. Meena Suresh', credits:4, seats:30, total:40, time:'MWF', slot:'8:00 - 8:50 AM' },
+  { id:'MATH201', dept:'MATH', level:'200', name:'Linear Algebra', instructor:'Dr. Vinod Kumar', credits:3, seats:20, total:30, time:'TTh', slot:'12:00 - 1:20 PM' },
+  { id:'MATH301', dept:'MATH', level:'300', name:'Probability & Statistics', instructor:'Prof. Geetha Ravi', credits:3, seats:15, total:25, time:'MWF', slot:'2:00 - 2:50 PM' },
+  { id:'MATH401', dept:'MATH', level:'400', name:'Numerical Methods', instructor:'Dr. Ashok Pant', credits:3, seats:12, total:20, time:'TTh', slot:'3:30 - 4:50 PM' },
+  { id:'SCI101', dept:'SCI', level:'100', name:'Physics I: Mechanics', instructor:'Dr. Ramesh Pillai', credits:4, seats:28, total:35, time:'TTh', slot:'9:00 - 10:20 AM' },
+  { id:'SCI201', dept:'SCI', level:'200', name:'Chemistry for Engineers', instructor:'Prof. Amala Nair', credits:3, seats:12, total:25, time:'MWF', slot:'1:00 - 1:50 PM' },
+  { id:'SCI301', dept:'SCI', level:'300', name:'Environmental Science', instructor:'Dr. Harish Menon', credits:3, seats:18, total:30, time:'Online', slot:'Async (self-paced)' },
+  { id:'HUM101', dept:'HUM', level:'100', name:'World Literature', instructor:'Prof. Divya Thomas', credits:3, seats:20, total:25, time:'TTh', slot:'2:00 - 3:20 PM' },
+  { id:'HUM201', dept:'HUM', level:'200', name:'Ethics in Technology', instructor:'Dr. Suresh Babu', credits:2, seats:15, total:20, time:'MWF', slot:'3:00 - 3:50 PM' },
+  { id:'HUM301', dept:'HUM', level:'300', name:'Modern Indian History', instructor:'Prof. Kavitha Rao', credits:3, seats:22, total:30, time:'Online', slot:'Async (self-paced)' },
+  { id:'BIZ101', dept:'BIZ', level:'100', name:'Principles of Management', instructor:'Dr. Pooja Shah', credits:3, seats:30, total:40, time:'TTh', slot:'11:00 - 12:20 PM' },
+  { id:'BIZ201', dept:'BIZ', level:'200', name:'Financial Accounting', instructor:'Prof. Naresh Patel', credits:3, seats:8, total:30, time:'MWF', slot:'10:00 - 10:50 AM' },
+  { id:'BIZ301', dept:'BIZ', level:'300', name:'Marketing Analytics', instructor:'Dr. Smita Joshi', credits:3, seats:16, total:25, time:'TTh', slot:'3:30 - 4:50 PM' }
+];
+
+var enrolled = [];
+var filters = { dept:'all', level:'all', time:'all' };
+var MAX_CREDITS = 18;
+
+var DEPT_BADGE = { CS:'badge-cs', MATH:'badge-math', SCI:'badge-sci', HUM:'badge-hum', BIZ:'badge-biz' };
+var SCHED_COLORS = ['', 'purple', 'green', 'yellow', 'red'];
+var CARD_COLORS = { CS:'cs', MATH:'math', SCI:'sci', HUM:'hum', BIZ:'biz' };
+
+// ======== PAGE NAVIGATION ========
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.topbar nav button').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  if (name === 'schedule') renderSchedule();
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'grades') renderGrades();
+}
+
+// ======== FILTER ========
+function setFilter(key, val, el) {
+  filters[key] = val;
+  var parentId = key === 'dept' ? 'deptChips' : key === 'level' ? 'levelChips' : 'timeChips';
+  document.getElementById(parentId).querySelectorAll('.chip').forEach(function(c){ c.classList.remove('active'); });
+  el.classList.add('active');
+  renderCatalog();
+}
+
+function getFiltered() {
+  var q = document.getElementById('searchInput') ? document.getElementById('searchInput').value.toLowerCase() : '';
+  return COURSES.filter(function(c) {
+    if (filters.dept !== 'all' && c.dept !== filters.dept) return false;
+    if (filters.level !== 'all' && c.level !== filters.level) return false;
+    if (filters.time !== 'all' && c.time !== filters.time) return false;
+    if (q && c.name.toLowerCase().indexOf(q) === -1 && c.id.toLowerCase().indexOf(q) === -1 && c.instructor.toLowerCase().indexOf(q) === -1) return false;
+    return true;
+  });
+}
+
+// ======== CREDITS ========
+function getTotalCredits() {
+  var total = 0;
+  enrolled.forEach(function(id) {
+    var c = COURSES.find(function(x){ return x.id === id; });
+    if (c) total += c.credits;
+  });
+  return total;
+}
+
+function updateCreditBar() {
+  var total = getTotalCredits();
+  var pct = Math.min(Math.round((total / MAX_CREDITS) * 100), 100);
+  var fill = document.getElementById('creditBarFill');
+  if (fill) fill.style.width = pct + '%';
+  var used = document.getElementById('creditUsed');
+  if (used) used.textContent = total + ' / ' + MAX_CREDITS + ' credits';
+  var pctEl = document.getElementById('creditPct');
+  if (pctEl) pctEl.textContent = pct + '%';
+}
+
+// ======== CATALOG ========
+function renderCatalog() {
+  var list = getFiltered();
+  var grid = document.getElementById('courseGrid');
+  var countEl = document.getElementById('catalogCount');
+  if (countEl) countEl.textContent = list.length + ' course' + (list.length !== 1 ? 's' : '');
+
+  if (!grid) return;
+  var html = '';
+  list.forEach(function(c) {
+    var isEnrolled = enrolled.indexOf(c.id) !== -1;
+    var seatPct = Math.round((c.seats / c.total) * 100);
+    var fillClass = seatPct > 50 ? '' : seatPct > 20 ? 'warn' : 'low';
+    html += '<div class="course-card' + (isEnrolled ? ' is-enrolled' : '') + '">';
+    if (isEnrolled) html += '<div class="enrolled-badge">Enrolled</div>';
+    html += '<span class="dept-badge ' + DEPT_BADGE[c.dept] + '">' + c.dept + ' ' + c.id.replace(c.dept,'') + '</span>';
+    html += '<h4>' + c.name + '</h4>';
+    html += '<div class="instructor">👤 ' + c.instructor + '</div>';
+    html += '<div class="course-meta"><span class="meta-item">📚 ' + c.credits + ' Credits</span><span class="meta-item">🕐 ' + c.time + '</span><span class="meta-item">🪑 ' + c.seats + '/' + c.total + ' seats</span></div>';
+    html += '<div class="seat-info">' + c.seats + ' of ' + c.total + ' seats available</div>';
+    html += '<div class="seat-bar-bg"><div class="seat-bar-fill ' + fillClass + '" style="width:' + seatPct + '%"></div></div>';
+    html += '<button class="enroll-btn' + (isEnrolled ? ' drop' : '') + '" onclick="toggleEnroll(\'' + c.id + '\')">' + (isEnrolled ? '✕ Drop Course' : '+ Enroll Now') + '</button>';
+    html += '</div>';
+  });
+
+  if (list.length === 0) {
+    html = '<div class="empty-state" style="grid-column:1/-1"><div class="icon">🔍</div><div>No courses match your filters.</div></div>';
+  }
+  grid.innerHTML = html;
+  updateCreditBar();
+}
+
+// ======== ENROLL / DROP ========
+function toggleEnroll(id) {
+  var c = COURSES.find(function(x){ return x.id === id; });
+  if (!c) return;
+  var idx = enrolled.indexOf(id);
+  if (idx !== -1) {
+    enrolled.splice(idx, 1);
+    showToast('Dropped: ' + c.name, 'red');
+  } else {
+    if (getTotalCredits() + c.credits > MAX_CREDITS) {
+      showToast('Credit limit reached! Max ' + MAX_CREDITS + ' credits.', 'red');
+      return;
+    }
+    if (c.seats <= 0) {
+      showToast('No seats available!', 'red');
+      return;
+    }
+    enrolled.push(id);
+    showToast('Enrolled in ' + c.name + '!', 'green');
+  }
+  renderCatalog();
+  renderDashboard();
+}
+
+// ======== DASHBOARD ========
+function renderDashboard() {
+  var countEl = document.getElementById('dash-enrolled-count');
+  var credEl = document.getElementById('dash-credits');
+  var listEl = document.getElementById('dash-enrolled-list');
+  if (countEl) countEl.textContent = enrolled.length;
+  if (credEl) credEl.textContent = getTotalCredits();
+
+  if (!listEl) return;
+  if (enrolled.length === 0) {
+    listEl.innerHTML = '<div class="empty-state"><div class="icon">📚</div><div>You haven\'t enrolled in any courses yet.<br>Go to <strong>Course Catalog</strong> to get started!</div></div>';
+    return;
+  }
+  var html = '';
+  enrolled.forEach(function(id) {
+    var c = COURSES.find(function(x){ return x.id === id; });
+    if (!c) return;
+    var colorClass = CARD_COLORS[c.dept] || '';
+    html += '<div class="enrolled-dash-card ' + colorClass + '">';
+    html += '<h4>' + c.id + ': ' + c.name + '</h4>';
+    html += '<div class="sub">' + c.instructor + ' &nbsp;|&nbsp; ' + c.credits + ' Credits &nbsp;|&nbsp; ' + c.slot + '</div>';
+    html += '</div>';
+  });
+  listEl.innerHTML = html;
+}
+
+// ======== SCHEDULE ========
+var CHIP_COLORS = ['', 'purple', 'green', 'yellow', 'red'];
+function renderSchedule() {
+  ['Mon','Tue','Wed','Thu','Fri'].forEach(function(d){
+    var el = document.getElementById('sched-' + d);
+    if (el) el.innerHTML = '';
+  });
+  var onlineEl = document.getElementById('onlineChips');
+  var onlineSec = document.getElementById('onlineSection');
+  var emptyEl = document.getElementById('scheduleEmpty');
+  if (onlineEl) onlineEl.innerHTML = '';
+
+  if (enrolled.length === 0) {
+    if (emptyEl) emptyEl.style.display = 'block';
+    if (onlineSec) onlineSec.style.display = 'none';
+    return;
+  }
+  if (emptyEl) emptyEl.style.display = 'none';
+
+  var onlineCount = 0;
+  enrolled.forEach(function(id, i) {
+    var c = COURSES.find(function(x){ return x.id === id; });
+    if (!c) return;
+    var colorClass = CHIP_COLORS[i % CHIP_COLORS.length];
+    var chipHtml = '<div class="schedule-chip ' + colorClass + '"><strong>' + c.id + '</strong>' + c.name + '<div class="time-txt">' + c.slot + '</div></div>';
+
+    if (c.time === 'MWF') {
+      ['Mon','Wed','Fri'].forEach(function(d){
+        var el = document.getElementById('sched-' + d);
+        if (el) el.innerHTML += chipHtml;
+      });
+    } else if (c.time === 'TTh') {
+      ['Tue','Thu'].forEach(function(d){
+        var el = document.getElementById('sched-' + d);
+        if (el) el.innerHTML += chipHtml;
+      });
+    } else {
+      onlineCount++;
+      if (onlineEl) onlineEl.innerHTML += '<span class="online-chip">' + c.id + ': ' + c.name + '</span>';
+    }
+  });
+
+  if (onlineSec) onlineSec.style.display = onlineCount > 0 ? 'block' : 'none';
+}
+
+// ======== GRADES ========
+function renderGrades() {
+  var tbody = document.getElementById('gradesTbody');
+  if (!tbody) return;
+  if (enrolled.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#9ca3af;padding:30px;">Enroll in courses to see them here.</td></tr>';
+    return;
+  }
+  var html = '';
+  enrolled.forEach(function(id) {
+    var c = COURSES.find(function(x){ return x.id === id; });
+    if (!c) return;
+    html += '<tr>';
+    html += '<td><strong>' + c.id + '</strong></td>';
+    html += '<td>' + c.name + '</td>';
+    html += '<td>' + c.credits + '</td>';
+    html += '<td><span style="color:#7c3aed;font-weight:600;">In Progress</span></td>';
+    html += '<td><span class="grade-pill grade-ip">—</span></td>';
+    html += '</tr>';
+  });
+
+  // Previous semester sample grades
+  html += '<tr><td colspan="5" style="background:#f9fafb;font-weight:700;font-size:12px;color:#6b7280;letter-spacing:0.5px;padding:10px 16px;">PREVIOUS SEMESTERS</td></tr>';
+  var prev = [
+    { id:'CS100', name:'Intro to Programming', cr:3, grade:'A' },
+    { id:'MATH100', name:'Pre-Calculus', cr:3, grade:'A-' },
+    { id:'ENG100', name:'English Composition', cr:3, grade:'B+' },
+    { id:'SCI100', name:'General Biology', cr:4, grade:'A' },
+  ];
+  prev.forEach(function(p) {
+    var cls = p.grade.startsWith('A') ? 'grade-a' : 'grade-b';
+    html += '<tr><td><strong>' + p.id + '</strong></td><td>' + p.name + '</td><td>' + p.cr + '</td><td style="color:#22c55e;font-weight:600;">Completed</td><td><span class="grade-pill ' + cls + '">' + p.grade + '</span></td></tr>';
+  });
+  tbody.innerHTML = html;
+}
+
+// ======== TOAST ========
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  setTimeout(function(){ t.className = 'toast'; }, 2800);
+}
+
+// ======== INIT ========
+renderCatalog();
+renderDashboard();
+</script>
+</body>
+</html>
